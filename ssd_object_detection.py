@@ -12,15 +12,15 @@ import imutils
 import cv2
 
 # construct the argument parse and parse the arguments
-ap = argparse.ArgumentParser()
-ap.add_argument("-p", "--prototxt", required=True, help="path to Caffe 'deploy' prototxt file")
-ap.add_argument("-m", "--model", required=True, help="path to Caffe pre-trained model")
-ap.add_argument("-i", "--input", type=str, default="", help="path to (optional) input video file")
-ap.add_argument("-o", "--output", type=str, default="", help="path to (optional) output video file")
-ap.add_argument("-d", "--display", type=int, default=1, help="whether or not output frame should be displayed")
-ap.add_argument("-c", "--confidence", type=float, default=0.2, help="minimum probability to filter weak detections")
-ap.add_argument("-u", "--use-gpu", type=bool, default=False, help="boolean indicating if CUDA GPU should be used")
-args = vars(ap.parse_args())
+# ap = argparse.ArgumentParser()
+# ap.add_argument("-p", "--prototxt", required=True, help="path to Caffe 'deploy' prototxt file")
+# ap.add_argument("-m", "--model", required=True, help="path to Caffe pre-trained model")
+# ap.add_argument("-i", "--input", type=str, default="", help="path to (optional) input video file")
+# ap.add_argument("-o", "--output", type=str, default="", help="path to (optional) output video file")
+# ap.add_argument("-d", "--display", type=int, default=1, help="whether or not output frame should be displayed")
+# ap.add_argument("-c", "--confidence", type=float, default=0.2, help="minimum probability to filter weak detections")
+# ap.add_argument("-u", "--use-gpu", type=bool, default=False, help="boolean indicating if CUDA GPU should be used")
+# args = vars(ap.parse_args())
 
 # initialize the list of class labels MobileNet SSD was trained to
 # detect, then generate a set of bounding box colors for each class
@@ -29,10 +29,11 @@ CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat", "bottle", "bus"
 COLORS = np.random.uniform(0, 255, size=(len(CLASSES), 3))
 
 # load our serialized model from disk
-net = cv2.dnn.readNetFromCaffe(args["prototxt"], args["model"])
+net = cv2.dnn.readNetFromCaffe("MobileNetSSD_deploy.prototxt", "MobileNetSSD_deploy.caffemodel")
 
 # check if we are going to use GPU
-if args["use_gpu"]:
+use_gpu = False
+if use_gpu:
     # set CUDA as the preferable backend and target
     print("[INFO] setting preferable backend and target to CUDA...")
     net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
@@ -41,7 +42,8 @@ if args["use_gpu"]:
 # initialize the video stream and pointer to output video file, then
 # start the FPS timer
 print("[INFO] accessing video stream...")
-vs = cv2.VideoCapture(args["input"] if args["input"] else 0)
+input_file = ""
+vs = cv2.VideoCapture(input_file if input_file else 0)
 writer = None
 fps = FPS().start()
 
@@ -74,7 +76,8 @@ while True:
 
         # filter out weak detections by ensuring the `confidence` is
         # greater than the minimum confidence
-        if confidence > args["confidence"]:
+        confidence_minimum_value = 0.2
+        if confidence > confidence_minimum_value:
             # extract the index of the class label from the
             # `detections`, then compute the (x, y)-coordinates of
             # the bounding box for the object
@@ -93,7 +96,8 @@ while True:
 
     # check to see if the output frame should be displayed to our
     # screen
-    if args["display"] > 0:
+    display = 1
+    if display > 0:
         # show the output frame
         cv2.imshow("Frame", frame)
         key = cv2.waitKey(1) & 0xFF
@@ -104,10 +108,11 @@ while True:
 
     # if an output video file path has been supplied and the video
     # writer has not been initialized, do so now
-    if args["output"] != "" and writer is None:
+    output_file = ""
+    if output_file != "" and writer is None:
         # initialize our video writer
         fourcc = cv2.VideoWriter_fourcc(*"MJPG")
-        writer = cv2.VideoWriter(args["output"], fourcc, 30,
+        writer = cv2.VideoWriter(output_file, fourcc, 30,
                                  (frame.shape[1], frame.shape[0]), True)
 
     # if the video writer is not None, write the frame to the output
